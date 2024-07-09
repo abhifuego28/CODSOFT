@@ -1,124 +1,139 @@
-# todo_list.py
+import tkinter as tk                   
+from tkinter import ttk                
+from tkinter import messagebox         
+import sqlite3 as sql                  
+  
+def add_task():  
+    task_string = task_field.get()  
+    if len(task_string) == 0:  
+        messagebox.showinfo('Error', 'Field is Empty.')  
+    else:  
+        tasks.append(task_string)  
+        the_cursor.execute('insert into tasks values (?)', (task_string ,))  
+        list_update()  
+        task_field.delete(0, 'end')  
+  
+def list_update():  
+    clear_list()  
+    for task in tasks:  
+        task_listbox.insert('end', task)  
+  
+def delete_task():  
+    try:  
+        the_value = task_listbox.get(task_listbox.curselection())  
+        if the_value in tasks:  
+            tasks.remove(the_value)  
+            list_update()  
+            the_cursor.execute('delete from tasks where title = ?', (the_value,))  
+    except:  
+        messagebox.showinfo('Error', 'No Task Selected. Cannot Delete.')        
+  
+def delete_all_tasks():  
+    message_box = messagebox.askyesno('Delete All', 'Are you sure?')  
+    if message_box == True:  
+        while(len(tasks) != 0):  
+            tasks.pop()  
+        the_cursor.execute('delete from tasks')  
+        list_update()  
+  
+def clear_list():  
+    task_listbox.delete(0, 'end')  
+  
+def close():  
+    print(tasks)  
+    guiWindow.destroy()  
+  
+def retrieve_database():  
+    while(len(tasks) != 0):  
+        tasks.pop()  
+    for row in the_cursor.execute('select title from tasks'):  
+        tasks.append(row[0])  
+  
+if __name__== "__main__": 
+    guiWindow = tk.Tk()  
+    guiWindow.title("To-Do List Manager - ARSHAD")  
+    guiWindow.geometry("500x450+750+250")  
+    guiWindow.resizable(0, 0)  
+    guiWindow.configure(bg = "#FAEBD7")  
+  
+    the_connection = sql.connect('listOfTasks.db')  
+    the_cursor = the_connection.cursor()  
+    the_cursor.execute('create table if not exists tasks (title text)')  
+  
 
-tasks = []
+    tasks = []  
+      
+    header_frame = tk.Frame(guiWindow, bg = "dark orange")  
+    functions_frame = tk.Frame(guiWindow, bg = "dark orange")  
+    listbox_frame = tk.Frame(guiWindow, bg = "dark orange")  
+  
+    header_frame.pack(fill = "both")  
+    functions_frame.pack(side = "left", expand = True, fill = "both")  
+    listbox_frame.pack(side = "right", expand = True, fill = "both")  
 
-def create_task():
-    task_description = input("Enter task description: ")
-    due_date = input("Enter due date (YYYY-MM-DD): ")
-    priority = input("Enter priority (high, medium, low): ")
-    task = {"description": task_description, "due_date": due_date, "priority": priority, "completed": False}
-    tasks.append(task)
-    print("Task created successfully!")
-
-def list_tasks():
-    print("Tasks:")
-    for i, task in enumerate(tasks, 1):
-        status = "Completed" if task["completed"] else "Pending"
-        print(f"{i}. {task['description']} - Due: {task['due_date']} - Priority: {task['priority']} - Status: {status}")
-
-def update_task():
-    task_id = int(input("Enter task ID to update: ")) - 1
-    if task_id < len(tasks):
-        task_description = input("Enter new task description: ")
-        due_date = input("Enter new due date (YYYY-MM-DD): ")
-        priority = input("Enter new priority (high, medium, low): ")
-        tasks[task_id]["description"] = task_description
-        tasks[task_id]["due_date"] = due_date
-        tasks[task_id]["priority"] = priority
-        print("Task updated successfully!")
-    else:
-        print("Invalid task ID!")
-
-def complete_task():
-    task_id = int(input("Enter task ID to complete: ")) - 1
-    if task_id < len(tasks):
-        tasks[task_id]["completed"] = True
-        print("Task marked as completed!")
-    else:
-        print("Invalid task ID!")
-
-def delete_task():
-    task_id = int(input("Enter task ID to delete: ")) - 1
-    if task_id < len(tasks):
-        del tasks[task_id]
-        print("Task deleted successfully!")
-    else:
-        print("Invalid task ID!")
-
-def search_tasks():
-    search_query = input("Enter search query: ")
-    results = [task for task in tasks if search_query in task["description"]]
-    if results:
-        print("Search results:")
-        for i, task in enumerate(results, 1):
-            status = "Completed" if task["completed"] else "Pending"
-            print(f"{i}. {task['description']} - Due: {task['due_date']} - Priority: {task['priority']} - Status: {status}")
-    else:
-        print("No tasks found!")
-
-def main():
-    while True:
-        print("To-Do List App")
-        print("1. Create Task")
-        print("2. List Tasks")
-        print("3. Update Task")
-        print("4. Complete Task")
-        print("5. Delete Task")
-        print("6. Search Tasks")
-        print("7. Quit")
-        choice = input("Enter your choice: ")
-        if choice == "1":
-            create_task()
-        elif choice == "2":
-            list_tasks()
-        elif choice == "3":
-            update_task()
-        elif choice == "4":
-            complete_task()
-        elif choice == "5":
-            delete_task()
-        elif choice == "6":
-            search_tasks()
-        elif choice == "7":
-            break
-        else:
-            print("Invalid choice!")
-
-if __name__ == "__main__":
-    main()
-    # todo_list_gui.py
-
-import tkinter as tk
-from tkinter import messagebox
-
-class ToDoListApp:
-    def __init__(self, root):
-        self.root = root
-        self.tasks = []
-
-        self.task_list_frame = tk.Frame(self.root)
-        self.task_list_frame.pack(fill="both", expand=True)
-
-        self.task_list_box = tk.Listbox(self.task_list_frame, width=40)
-        self.task_list_box.pack(fill="both", expand=True)
-
-        self.button_frame = tk.Frame(self.root)
-        self.button_frame.pack(fill="x")
-
-        self.create_button = tk.Button(self.button_frame, text="Create Task", command=self.create_task)
-        self.create_button.pack(side="left")
-
-        self.update_button = tk.Button(self.button_frame, text="Update Task", command=self.update_task)
-        self.update_button.pack(side="left")
-
-        self.complete_button = tk.Button(self.button_frame, text="Complete Task", command=self.complete_task)
-        self.complete_button.pack(side="left")
-
-        self.delete_button = tk.Button(self.button_frame, text="Delete Task", command=self.delete_task)
-        self.delete_button.pack(side="left")
-
-        self.search_button = tk.Button(self.button_frame, text="Search Tasks", command=self.search_tasks)
-        self.search_button.pack(side="left")
-
-    def create_task(self):
-        task_description = tk.simpledialog.askstring("Create Task", "Enter task description")
+    header_label = ttk.Label(  
+        header_frame,  
+        text = "To-Do List",  
+        font = ("Alice", "30", "bold"),
+        background = "dark orange",  
+        foreground = "#FFFFFF"  
+    )  
+    header_label.pack(padx = 10, pady = 10)  
+  
+    task_label = ttk.Label(  
+        functions_frame,  
+        text = "Enter the Task:",  
+        font = ("Alice", "11", "bold"),  
+        background = "dark orange",  
+        foreground = "#FFFFFF"  
+    )  
+    task_label.place(x = 30, y = 40)  
+      
+    task_field = ttk.Entry(  
+        functions_frame,  
+        font = ("Consolas", "12"),  
+        width = 18,  
+        background = "dark orange",  
+        foreground = "#A52A2A"  
+    )  
+    task_field.place(x = 30, y = 80)  
+  
+    add_button = ttk.Button(  
+        functions_frame,  
+        text = "Add Task",  
+        width = 24,  
+        command = add_task  
+    )  
+    del_button = ttk.Button(  
+        functions_frame,  
+        text = "Delete Task",  
+        width = 24,  
+        command = delete_task  
+    )  
+    exit_button = ttk.Button(  
+        functions_frame,  
+        text = "Exit",  
+        width = 24,  
+        command = close  
+    )  
+    add_button.place(x = 30, y = 120)  
+    del_button.place(x = 30, y = 160)  
+    exit_button.place(x = 30, y = 200)  
+  
+    task_listbox = tk.Listbox(  
+        listbox_frame,  
+        width = 26,  
+        height = 13,  
+        selectmode = 'SINGLE',  
+        background = "#FFFFFF",  
+        foreground = "#000000",  
+        selectbackground = "#CD853F",  
+        selectforeground = "#FFFFFF"  
+    )  
+    task_listbox.place(x = 10, y = 20)  
+  
+    retrieve_database()  
+    list_update()  
+    guiWindow.mainloop() 
+    the_connection.commit()  
+    the_cursor.close()
